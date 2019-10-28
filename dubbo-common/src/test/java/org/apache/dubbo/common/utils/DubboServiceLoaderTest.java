@@ -20,11 +20,11 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.apache.dubbo.common.utils.DubboServiceLoader.loadServices;
+import static org.apache.dubbo.common.utils.PrioritizedServiceLoader.loadServices;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * {@link DubboServiceLoader} Test
+ * {@link PrioritizedServiceLoader} Test
  *
  * @since 2.7.5
  */
