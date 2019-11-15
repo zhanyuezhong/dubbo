@@ -172,6 +172,9 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
     }
 
     public boolean shouldExport() {
+        //if(true){
+        //    throw new RuntimeException("分析启动路径");
+        //}
         Boolean export = getExport();
         // default value is true
         return export == null ? true : export;

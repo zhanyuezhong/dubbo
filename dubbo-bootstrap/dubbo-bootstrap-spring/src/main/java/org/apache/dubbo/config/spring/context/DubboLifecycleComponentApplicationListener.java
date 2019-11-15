@@ -58,6 +58,7 @@ public class DubboLifecycleComponentApplicationListener implements ApplicationLi
     }
 
     protected void onContextRefreshedEvent(ContextRefreshedEvent event) {
+        //事件启动
         ApplicationContext context = event.getApplicationContext();
         DubboBootstrap bootstrap = loadBootsttrapAsBean(context);
         if (bootstrap == null) {
