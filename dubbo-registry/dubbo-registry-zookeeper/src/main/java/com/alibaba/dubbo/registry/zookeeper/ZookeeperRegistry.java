@@ -107,10 +107,11 @@ public class ZookeeperRegistry extends FailbackRegistry {
             logger.warn("Failed to close zookeeper client " + getUrl() + ", cause: " + e.getMessage(), e);
         }
     }
-
+    //dubbo://192.168.31.30:20880/com.alibaba.dubbo.demo.DemoService?anyhost=true&application=demo-provider&bean.name=com.alibaba.dubbo.demo.DemoService&dubbo=2.0.2&generic=false&interface=com.alibaba.dubbo.demo.DemoService&methods=sayHello&pid=3986&side=provider&timestamp=1574474445864
     @Override
     protected void doRegister(URL url) {
         try {
+            ///dubbo/intercadeName/provider/ encodeURL(fullParam)
             zkClient.create(toUrlPath(url), url.getParameter(Constants.DYNAMIC_KEY, true));
         } catch (Throwable e) {
             throw new RpcException("Failed to register " + url + " to zookeeper " + getUrl() + ", cause: " + e.getMessage(), e);
@@ -241,7 +242,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
     private String toRootPath() {
         return root;
     }
-
+    //dubbo/interfaceName
     private String toServicePath(URL url) {
         String name = url.getServiceInterface();
         if (Constants.ANY_VALUE.equals(name)) {

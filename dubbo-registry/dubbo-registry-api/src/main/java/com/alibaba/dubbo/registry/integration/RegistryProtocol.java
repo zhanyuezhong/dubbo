@@ -132,12 +132,15 @@ public class RegistryProtocol implements Protocol {
     @Override
     public <T> Exporter<T> export(final Invoker<T> originInvoker) throws RpcException {
         //export invoker
+        //netty注册实现
         final ExporterChangeableWrapper<T> exporter = doLocalExport(originInvoker);
 
         URL registryUrl = getRegistryUrl(originInvoker);
 
         //registry provider
+        //根据注册协议获取真实的Registry。 此处是zk协议 ZookeeperRegistryFactory
         final Registry registry = getRegistry(originInvoker);
+        //获取export = 实际的导出服务地址
         final URL registeredProviderUrl = getRegisteredProviderUrl(originInvoker);
 
         //to judge to delay publish whether or not
@@ -206,6 +209,30 @@ public class RegistryProtocol implements Protocol {
         return registryFactory.getRegistry(registryUrl);
     }
 
+    /**
+     * 如果是注册协议url，则将实际的注册协议参数替换registry
+     * registry://127.0.0.1:2181/com.alibaba.dubbo.registry.RegistryService
+     * ?application=demo-provider
+     * &dubbo=2.0.2
+     * &export=
+     *      dubbo://192.168.31.30:20880/com.alibaba.dubbo.demo.DemoService
+     *      ?anyhost=true
+     *      &application=demo-provider
+     *      &bean.name=com.alibaba.dubbo.demo.DemoService
+     *      &bind.ip=192.168.31.30&bind.port=20880
+     *      &dubbo=2.0.2&generic=false
+     *      &interface=com.alibaba.dubbo.demo.DemoService
+     *      &methods=sayHello
+     *      &pid=3291
+     *      &qos.port=22222
+     *      &side=provider
+     *      &timestamp=1574472876803
+     *      &pid=3291&qos.port=22222&
+     *      registry=zookeeper&timestamp=1574472876786
+     *
+     * @param originInvoker
+     * @return
+     */
     private URL getRegistryUrl(Invoker<?> originInvoker) {
         URL registryUrl = originInvoker.getUrl();
         if (Constants.REGISTRY_PROTOCOL.equals(registryUrl.getProtocol())) {
