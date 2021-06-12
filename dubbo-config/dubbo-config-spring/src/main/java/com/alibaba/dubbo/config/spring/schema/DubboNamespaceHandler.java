@@ -31,6 +31,7 @@ import org.springframework.beans.factory.xml.NamespaceHandlerSupport;
 
 /**
  * DubboNamespaceHandler
+ * 解析自定义标签入口，解析xml 文件中的配置如 application provider等。
  *
  * @export
  */

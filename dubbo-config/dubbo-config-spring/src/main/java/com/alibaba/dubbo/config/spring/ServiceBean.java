@@ -47,6 +47,7 @@ import static com.alibaba.dubbo.config.spring.util.BeanFactoryUtils.addApplicati
 
 /**
  * ServiceFactoryBean
+ * bean的实际定义，即每个provider 暴露过程
  *
  * @export
  */
@@ -76,6 +77,10 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
         this.service = service;
     }
 
+    /**
+     * 设置当前对下为listener
+     * @param applicationContext
+     */
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
@@ -97,6 +102,10 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
         return service;
     }
 
+    /**
+     * ContextRefreshedEvent spring 容器加载完成
+     * @param event
+     */
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
         if (isDelay() && !isExported() && !isUnexported()) {
@@ -116,12 +125,19 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
         return supportedApplicationListener && (delay == null || delay == -1);
     }
 
+    /**
+     * bean的初始化方法，简单理解为 new bean & 设置完属性之后要做一些事情
+     * @throws Exception
+     */
+
     @Override
     @SuppressWarnings({"unchecked", "deprecation"})
     public void afterPropertiesSet() throws Exception {
         if (getProvider() == null) {
+            //todo provider 的统一设置？
             Map<String, ProviderConfig> providerConfigMap = applicationContext == null ? null : BeanFactoryUtils.beansOfTypeIncludingAncestors(applicationContext, ProviderConfig.class, false, false);
             if (providerConfigMap != null && providerConfigMap.size() > 0) {
+                //从容器中拿到协议配置
                 Map<String, ProtocolConfig> protocolConfigMap = applicationContext == null ? null : BeanFactoryUtils.beansOfTypeIncludingAncestors(applicationContext, ProtocolConfig.class, false, false);
                 if ((protocolConfigMap == null || protocolConfigMap.size() == 0)
                         && providerConfigMap.size() > 1) { // backward compatibility
@@ -189,6 +205,7 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
         if ((getRegistries() == null || getRegistries().isEmpty())
                 && (getProvider() == null || getProvider().getRegistries() == null || getProvider().getRegistries().isEmpty())
                 && (getApplication() == null || getApplication().getRegistries() == null || getApplication().getRegistries().isEmpty())) {
+            //从容器中拿到注册地址，然后设置给当前的service bean
             Map<String, RegistryConfig> registryConfigMap = applicationContext == null ? null : BeanFactoryUtils.beansOfTypeIncludingAncestors(applicationContext, RegistryConfig.class, false, false);
             if (registryConfigMap != null && registryConfigMap.size() > 0) {
                 List<RegistryConfig> registryConfigs = new ArrayList<RegistryConfig>();

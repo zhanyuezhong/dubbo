@@ -102,6 +102,12 @@ public class ExtensionLoader<T> {
         return type.isAnnotationPresent(SPI.class);
     }
 
+    /**
+     * 从缓存中加载扩展器，如果没有，则 new 一个loader
+     * @param type
+     * @param <T>
+     * @return
+     */
     @SuppressWarnings("unchecked")
     public static <T> ExtensionLoader<T> getExtensionLoader(Class<T> type) {
         if (type == null)
@@ -432,6 +438,10 @@ public class ExtensionLoader<T> {
         }
     }
 
+    /**
+     * 返回自适应扩展
+     * @return
+     */
     @SuppressWarnings("unchecked")
     public T getAdaptiveExtension() {
         Object instance = cachedAdaptiveInstance.get();
@@ -508,6 +518,11 @@ public class ExtensionLoader<T> {
         }
     }
 
+    /**
+     * 注入属性
+     * @param instance
+     * @return
+     */
     private T injectExtension(T instance) {
         try {
             if (objectFactory != null) {
@@ -588,6 +603,11 @@ public class ExtensionLoader<T> {
         return extensionClasses;
     }
 
+    /**
+     * 加载自适应扩展点
+     * @param extensionClasses
+     * @param dir
+     */
     private void loadDirectory(Map<String, Class<?>> extensionClasses, String dir) {
         String fileName = dir + type.getName();
         try {
@@ -646,11 +666,13 @@ public class ExtensionLoader<T> {
     }
 
     private void loadClass(Map<String, Class<?>> extensionClasses, java.net.URL resourceURL, Class<?> clazz, String name) throws NoSuchMethodException {
+        //判断父子类
         if (!type.isAssignableFrom(clazz)) {
             throw new IllegalStateException("Error when load extension class(interface: " +
                     type + ", class line: " + clazz.getName() + "), class "
                     + clazz.getName() + "is not subtype of interface.");
         }
+        //判断某个 clazz 上是否有 Adaptive注解，如果有，则说明是自适应的如： AdaptiveExtensionFactory
         if (clazz.isAnnotationPresent(Adaptive.class)) {
             if (cachedAdaptiveClass == null) {
                 cachedAdaptiveClass = clazz;
@@ -660,6 +682,7 @@ public class ExtensionLoader<T> {
                         + ", " + clazz.getClass().getName());
             }
         } else if (isWrapperClass(clazz)) {
+            //判断是否为wrapper 的扩展点
             Set<Class<?>> wrappers = cachedWrapperClasses;
             if (wrappers == null) {
                 cachedWrapperClasses = new ConcurrentHashSet<Class<?>>();
@@ -667,6 +690,7 @@ public class ExtensionLoader<T> {
             }
             wrappers.add(clazz);
         } else {
+            //判断一下有没有构造函数，没有则抛异常
             clazz.getConstructor();
             if (name == null || name.length() == 0) {
                 name = findAnnotationName(clazz);
@@ -676,6 +700,7 @@ public class ExtensionLoader<T> {
             }
             String[] names = NAME_SEPARATOR.split(name);
             if (names != null && names.length > 0) {
+                //判断是否是自动激活
                 Activate activate = clazz.getAnnotation(Activate.class);
                 if (activate != null) {
                     cachedActivates.put(names[0], activate);
@@ -704,6 +729,12 @@ public class ExtensionLoader<T> {
         }
     }
 
+    /**
+     * 获取扩展点的名称
+     * 例如 xxxProtocol  返回xx
+     * @param clazz
+     * @return
+     */
     @SuppressWarnings("deprecation")
     private String findAnnotationName(Class<?> clazz) {
         com.alibaba.dubbo.common.Extension extension = clazz.getAnnotation(com.alibaba.dubbo.common.Extension.class);
@@ -727,6 +758,7 @@ public class ExtensionLoader<T> {
     }
 
     private Class<?> getAdaptiveExtensionClass() {
+        //加载所有的类
         getExtensionClasses();
         if (cachedAdaptiveClass != null) {
             return cachedAdaptiveClass;
@@ -734,13 +766,90 @@ public class ExtensionLoader<T> {
         return cachedAdaptiveClass = createAdaptiveExtensionClass();
     }
 
+    /**
+     * 创建自适应扩展的动态代理
+     * @return
+     */
     private Class<?> createAdaptiveExtensionClass() {
         String code = createAdaptiveExtensionClassCode();
+        logger.info("code ="+code);
         ClassLoader classLoader = findClassLoader();
         com.alibaba.dubbo.common.compiler.Compiler compiler = ExtensionLoader.getExtensionLoader(com.alibaba.dubbo.common.compiler.Compiler.class).getAdaptiveExtension();
         return compiler.compile(code, classLoader);
     }
 
+    /**
+     * 为自适应扩展的类 增强代理
+     * 例如：Protocol 的增强
+     *
+     * public class Protocol$Adaptive implements com.alibaba.dubbo.rpc.Protocol {
+     *     public void destroy() {throw new UnsupportedOperationException("method public abstract void com.alibaba.dubbo.rpc.Protocol.destroy() of interface com.alibaba.dubbo.rpc.Protocol is not adaptive method!");
+     *     }
+     *     public int getDefaultPort() {throw new UnsupportedOperationException("method public abstract int com.alibaba.dubbo.rpc.Protocol.getDefaultPort() of interface com.alibaba.dubbo.rpc.Protocol is not adaptive method!");
+     *     }
+     *     public com.alibaba.dubbo.rpc.Exporter export(com.alibaba.dubbo.rpc.Invoker arg0) throws com.alibaba.dubbo.rpc.RpcException {
+     *         if (arg0 == null) throw new IllegalArgumentException("com.alibaba.dubbo.rpc.Invoker argument == null");
+     *         if (arg0.getUrl() == null) throw new IllegalArgumentException("com.alibaba.dubbo.rpc.Invoker argument getUrl() == null");com.alibaba.dubbo.common.URL url = arg0.getUrl();
+     *         String extName = ( url.getProtocol() == null ? "dubbo" : url.getProtocol() );
+     *         if(extName == null) throw new IllegalStateException("Fail to get extension(com.alibaba.dubbo.rpc.Protocol) name from url(" + url.toString() + ") use keys([protocol])");
+     *         com.alibaba.dubbo.rpc.Protocol extension = (com.alibaba.dubbo.rpc.Protocol)ExtensionLoader.getExtensionLoader(com.alibaba.dubbo.rpc.Protocol.class).getExtension(extName);
+     *         return extension.export(arg0);
+     *     }
+     *     public com.alibaba.dubbo.rpc.Invoker refer(java.lang.Class arg0, com.alibaba.dubbo.common.URL arg1) throws com.alibaba.dubbo.rpc.RpcException {
+     *         if (arg1 == null) throw new IllegalArgumentException("url == null");
+     *         com.alibaba.dubbo.common.URL url = arg1;
+     *         String extName = ( url.getProtocol() == null ? "dubbo" : url.getProtocol() );
+     *         if(extName == null) throw new IllegalStateException("Fail to get extension(com.alibaba.dubbo.rpc.Protocol) name from url(" + url.toString() + ") use keys([protocol])");
+     *         com.alibaba.dubbo.rpc.Protocol extension = (com.alibaba.dubbo.rpc.Protocol)ExtensionLoader.getExtensionLoader(com.alibaba.dubbo.rpc.Protocol.class).getExtension(extName);
+     *         return extension.refer(arg0, arg1);
+     *     }
+     * }
+     *
+     *
+     *
+     * package com.alibaba.dubbo.rpc;
+     *
+     * import com.alibaba.dubbo.common.extension.ExtensionLoader;
+     *
+     * public class ProxyFactory$Adaptive implements com.alibaba.dubbo.rpc.ProxyFactory {
+     *     public java.lang.Object getProxy(com.alibaba.dubbo.rpc.Invoker arg0) throws com.alibaba.dubbo.rpc.RpcException {
+     *         if (arg0 == null) throw new IllegalArgumentException("com.alibaba.dubbo.rpc.Invoker argument == null");
+     *         if (arg0.getUrl() == null)
+     *             throw new IllegalArgumentException("com.alibaba.dubbo.rpc.Invoker argument getUrl() == null");
+     *         com.alibaba.dubbo.common.URL url = arg0.getUrl();
+     *         String extName = url.getParameter("proxy", "javassist");
+     *         if (extName == null)
+     *             throw new IllegalStateException("Fail to get extension(com.alibaba.dubbo.rpc.ProxyFactory) name from url(" + url.toString() + ") use keys([proxy])");
+     *         com.alibaba.dubbo.rpc.ProxyFactory extension = (com.alibaba.dubbo.rpc.ProxyFactory) ExtensionLoader.getExtensionLoader(com.alibaba.dubbo.rpc.ProxyFactory.class).getExtension(extName);
+     *         return extension.getProxy(arg0);
+     *     }
+     *
+     *     public java.lang.Object getProxy(com.alibaba.dubbo.rpc.Invoker arg0, boolean arg1) throws com.alibaba.dubbo.rpc.RpcException {
+     *         if (arg0 == null) throw new IllegalArgumentException("com.alibaba.dubbo.rpc.Invoker argument == null");
+     *         if (arg0.getUrl() == null)
+     *             throw new IllegalArgumentException("com.alibaba.dubbo.rpc.Invoker argument getUrl() == null");
+     *         com.alibaba.dubbo.common.URL url = arg0.getUrl();
+     *         String extName = url.getParameter("proxy", "javassist");
+     *         if (extName == null)
+     *             throw new IllegalStateException("Fail to get extension(com.alibaba.dubbo.rpc.ProxyFactory) name from url(" + url.toString() + ") use keys([proxy])");
+     *         com.alibaba.dubbo.rpc.ProxyFactory extension = (com.alibaba.dubbo.rpc.ProxyFactory) ExtensionLoader.getExtensionLoader(com.alibaba.dubbo.rpc.ProxyFactory.class).getExtension(extName);
+     *         return extension.getProxy(arg0, arg1);
+     *     }
+     *
+     *     public com.alibaba.dubbo.rpc.Invoker getInvoker(java.lang.Object arg0, java.lang.Class arg1, com.alibaba.dubbo.common.URL arg2) throws com.alibaba.dubbo.rpc.RpcException {
+     *         if (arg2 == null) throw new IllegalArgumentException("url == null");
+     *         com.alibaba.dubbo.common.URL url = arg2;
+     *         String extName = url.getParameter("proxy", "javassist");
+     *         if (extName == null)
+     *             throw new IllegalStateException("Fail to get extension(com.alibaba.dubbo.rpc.ProxyFactory) name from url(" + url.toString() + ") use keys([proxy])");
+     *         com.alibaba.dubbo.rpc.ProxyFactory extension = (com.alibaba.dubbo.rpc.ProxyFactory) ExtensionLoader.getExtensionLoader(com.alibaba.dubbo.rpc.ProxyFactory.class).getExtension(extName);
+     *         return extension.getInvoker(arg0, arg1, arg2);
+     *     }
+     * }
+     *
+     *
+     * @return
+     */
     private String createAdaptiveExtensionClassCode() {
         StringBuilder codeBuilder = new StringBuilder();
         Method[] methods = type.getMethods();
