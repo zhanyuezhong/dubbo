@@ -67,28 +67,61 @@ public class ExtensionLoader<T> {
     private static final String DUBBO_INTERNAL_DIRECTORY = DUBBO_DIRECTORY + "internal/";
 
     private static final Pattern NAME_SEPARATOR = Pattern.compile("\\s*[,]+\\s*");
-
+    /**
+     * key：类型
+     * value：扩展点加载器
+     */
     private static final ConcurrentMap<Class<?>, ExtensionLoader<?>> EXTENSION_LOADERS = new ConcurrentHashMap<Class<?>, ExtensionLoader<?>>();
-
+    /**
+     * hey:类型
+     * value：扩展点真正实现类
+     */
     private static final ConcurrentMap<Class<?>, Object> EXTENSION_INSTANCES = new ConcurrentHashMap<Class<?>, Object>();
 
     // ==============================
-
+    /**
+     * 要加载的spi接口
+     */
     private final Class<?> type;
-
+    /**
+     * 工厂类: 为 spi的扩展点 setter属性赋值
+     */
     private final ExtensionFactory objectFactory;
-
+    /**
+     * key：spi接口
+     * value：类型名称
+     */
     private final ConcurrentMap<Class<?>, String> cachedNames = new ConcurrentHashMap<Class<?>, String>();
-
+    /**
+     * 和上方相反
+     */
     private final Holder<Map<String, Class<?>>> cachedClasses = new Holder<Map<String, Class<?>>>();
-
+    /**
+     * 是否自动激活
+     */
     private final Map<String, Activate> cachedActivates = new ConcurrentHashMap<String, Activate>();
+    /**
+     * key：名称
+     * value：实例
+     */
     private final ConcurrentMap<String, Holder<Object>> cachedInstances = new ConcurrentHashMap<String, Holder<Object>>();
+    /**
+     * 自适应扩展的实例
+     */
     private final Holder<Object> cachedAdaptiveInstance = new Holder<Object>();
+    /**
+     * 自适应的扩展的类
+     * 1.接口上有Adaptive注解，如：
+     */
     private volatile Class<?> cachedAdaptiveClass = null;
+    /**
+     * spi:value :默认的扩展点
+     */
     private String cachedDefaultName;
     private volatile Throwable createAdaptiveInstanceError;
-
+    /**
+     * 包装类
+     */
     private Set<Class<?>> cachedWrapperClasses;
 
     private Map<String, IllegalStateException> exceptions = new ConcurrentHashMap<String, IllegalStateException>();
@@ -98,6 +131,12 @@ public class ExtensionLoader<T> {
         objectFactory = (type == ExtensionFactory.class ? null : ExtensionLoader.getExtensionLoader(ExtensionFactory.class).getAdaptiveExtension());
     }
 
+    /**
+     * 是否含有spi注解
+     * @param type
+     * @param <T>
+     * @return
+     */
     private static <T> boolean withExtensionAnnotation(Class<T> type) {
         return type.isAnnotationPresent(SPI.class);
     }
@@ -492,6 +531,11 @@ public class ExtensionLoader<T> {
         return new IllegalStateException(buf.toString());
     }
 
+    /**
+     * 获取包装类+扩展点
+     * @param name
+     * @return
+     */
     @SuppressWarnings("unchecked")
     private T createExtension(String name) {
         Class<?> clazz = getExtensionClasses().get(name);
@@ -527,6 +571,7 @@ public class ExtensionLoader<T> {
         try {
             if (objectFactory != null) {
                 for (Method method : instance.getClass().getMethods()) {
+                    //如果有set方法
                     if (method.getName().startsWith("set")
                             && method.getParameterTypes().length == 1
                             && Modifier.isPublic(method.getModifiers())) {
@@ -538,7 +583,10 @@ public class ExtensionLoader<T> {
                         }
                         Class<?> pt = method.getParameterTypes()[0];
                         try {
+
+                            //属性名称 例如 setProtocol
                             String property = method.getName().length() > 3 ? method.getName().substring(3, 4).toLowerCase() + method.getName().substring(4) : "";
+                            //获取实际扩展，然后注入
                             Object object = objectFactory.getExtension(pt, property);
                             if (object != null) {
                                 method.invoke(instance, object);
@@ -581,6 +629,10 @@ public class ExtensionLoader<T> {
         return classes;
     }
 
+    /**
+     * 加载所有的spi
+     * @return
+     */
     // synchronized in getExtensionClasses
     private Map<String, Class<?>> loadExtensionClasses() {
         final SPI defaultAnnotation = type.getAnnotation(SPI.class);
@@ -630,6 +682,12 @@ public class ExtensionLoader<T> {
         }
     }
 
+    /**
+     * 加载kv map
+     * @param extensionClasses
+     * @param classLoader
+     * @param resourceURL
+     */
     private void loadResource(Map<String, Class<?>> extensionClasses, ClassLoader classLoader, java.net.URL resourceURL) {
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(resourceURL.openStream(), "utf-8"));
@@ -698,6 +756,8 @@ public class ExtensionLoader<T> {
                     throw new IllegalStateException("No such extension name for the class " + clazz.getName() + " in the config " + resourceURL);
                 }
             }
+            //stub=com.alibaba.dubbo.rpc.proxy.wrapper.StubProxyFactoryWrapper
+            //name = stub
             String[] names = NAME_SEPARATOR.split(name);
             if (names != null && names.length > 0) {
                 //判断是否是自动激活
@@ -711,6 +771,7 @@ public class ExtensionLoader<T> {
                     }
                     Class<?> c = extensionClasses.get(n);
                     if (c == null) {
+                        //
                         extensionClasses.put(n, clazz);
                     } else if (c != clazz) {
                         throw new IllegalStateException("Duplicate extension " + type.getName() + " name " + n + " on " + c.getName() + " and " + clazz.getName());
@@ -768,6 +829,7 @@ public class ExtensionLoader<T> {
 
     /**
      * 创建自适应扩展的动态代理
+     * 对spi接口创建代理类
      * @return
      */
     private Class<?> createAdaptiveExtensionClass() {

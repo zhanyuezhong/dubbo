@@ -26,15 +26,20 @@ import java.util.List;
 
 /**
  * AdaptiveExtensionFactory
+ * 所有spi的工厂方法
  */
 @Adaptive
 public class AdaptiveExtensionFactory implements ExtensionFactory {
-
+    /**
+     * 所有支持的扩展工厂
+     */
     private final List<ExtensionFactory> factories;
 
     public AdaptiveExtensionFactory() {
+        //获取 ExtensionFactory spi加载器
         ExtensionLoader<ExtensionFactory> loader = ExtensionLoader.getExtensionLoader(ExtensionFactory.class);
         List<ExtensionFactory> list = new ArrayList<ExtensionFactory>();
+        //找到配置的实现类
         for (String name : loader.getSupportedExtensions()) {
             list.add(loader.getExtension(name));
         }
