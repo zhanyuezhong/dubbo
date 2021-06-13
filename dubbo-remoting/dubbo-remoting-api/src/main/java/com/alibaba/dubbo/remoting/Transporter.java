@@ -22,6 +22,7 @@ import com.alibaba.dubbo.common.extension.Adaptive;
 import com.alibaba.dubbo.common.extension.SPI;
 
 /**
+ * 传输层接口定义
  * Transporter. (SPI, Singleton, ThreadSafe)
  * <p>
  * <a href="http://en.wikipedia.org/wiki/Transport_Layer">Transport Layer</a>
@@ -33,6 +34,7 @@ import com.alibaba.dubbo.common.extension.SPI;
 public interface Transporter {
 
     /**
+     * 构建一个server端。 传入handler
      * Bind a server.
      *
      * @param url     server url

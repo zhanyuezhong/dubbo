@@ -23,6 +23,7 @@ import com.alibaba.dubbo.remoting.transport.ChannelHandlerAdapter;
 import com.alibaba.dubbo.remoting.transport.ChannelHandlerDispatcher;
 
 /**
+ * 根据spi加载 Transporter facade
  * Transporter facade. (API, Static, ThreadSafe)
  */
 public class Transporters {

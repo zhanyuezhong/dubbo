@@ -29,6 +29,7 @@ import com.alibaba.dubbo.remoting.transport.dispatcher.all.AllDispatcher;
 public interface Dispatcher {
 
     /**
+     * 事件分发器
      * dispatch the message to threadpool.
      *
      * @param handler
