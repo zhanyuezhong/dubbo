@@ -161,6 +161,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
     protected List<URL> loadRegistries(boolean provider) {
         checkRegistry();
         List<URL> registryList = new ArrayList<URL>();
+        //注册中心配置
         if (registries != null && !registries.isEmpty()) {
             for (RegistryConfig config : registries) {
                 String address = config.getAddress();
@@ -191,6 +192,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
                     List<URL> urls = UrlUtils.parseURLs(address, map);
                     for (URL url : urls) {
                         url = url.addParameter(Constants.REGISTRY_KEY, url.getProtocol());
+                        //设置协议为:registry  很重要的一行代码，比较沙雕
                         url = url.setProtocol(Constants.REGISTRY_PROTOCOL);
                         if ((provider && url.getParameter(Constants.REGISTER_KEY, true))
                                 || (!provider && url.getParameter(Constants.SUBSCRIBE_KEY, true))) {
