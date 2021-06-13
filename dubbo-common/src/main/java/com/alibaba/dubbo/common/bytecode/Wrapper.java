@@ -140,7 +140,10 @@ public abstract class Wrapper {
      * }
      *
      *
-     *
+     *o:代理对象，如 DemoServiceImpl
+     *n:方法名称
+     *p：参数类型
+     *v：实际参数
      * public Object invokeMethod(Object o, String n, Class[] p, Object[] v) throws java.lang.reflect.InvocationTargetException
      * { com.alibaba.dubbo.demo.DemoService w;
      * try{ w = ((com.alibaba.dubbo.demo.DemoService)$1); }catch(Throwable e){ throw new IllegalArgumentException(e); }
