@@ -32,6 +32,7 @@ public interface Server extends Endpoint, Resetable {
 
     /**
      * is bound.
+     * 是否已经绑定？？？
      *
      * @return bound
      */
@@ -39,6 +40,7 @@ public interface Server extends Endpoint, Resetable {
 
     /**
      * get channels.
+     * 获取所有链接的客户端channels
      *
      * @return channels
      */
@@ -46,7 +48,7 @@ public interface Server extends Endpoint, Resetable {
 
     /**
      * get channel.
-     *
+     * 获取具体的channle
      * @param remoteAddress
      * @return channel
      */

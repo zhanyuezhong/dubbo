@@ -108,6 +108,13 @@ public class DubboProtocol extends AbstractProtocol {
                     + ", channel: consumer: " + channel.getRemoteAddress() + " --> provider: " + channel.getLocalAddress());
         }
 
+        /**
+         * 实际的调用链路
+         * @param channel
+         * @param message
+         * @throws RemotingException
+         */
+        //dubboProtocal.requestHandler ->HeaderExchangeHandler->DecodeHandler->HeartbeatHandler->MultiMessageHandler
         @Override
         public void received(Channel channel, Object message) throws RemotingException {
             if (message instanceof Invocation) {
@@ -259,6 +266,7 @@ public class DubboProtocol extends AbstractProtocol {
         //client can export a service which's only for server to invoke
         boolean isServer = url.getParameter(Constants.IS_SERVER_KEY, true);
         if (isServer) {
+            //以host:port形式注册 server
             ExchangeServer server = serverMap.get(key);
             if (server == null) {
                 serverMap.put(key, createServer(url));

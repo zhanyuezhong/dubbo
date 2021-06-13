@@ -44,6 +44,11 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Pattern;
 
 /**
+ * 一句话解释spi加载机制
+ * 1.为@SPI接口生成动态代理
+ * 实际调用过程中，根据协议或者url参数加载具体的spi实现执行。
+ * 对实际的spi属性进行ioc赋值
+ *
  * Load dubbo extensions
  * <ul>
  * <li>auto inject dependency extension </li>

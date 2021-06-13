@@ -44,6 +44,9 @@ public abstract class AbstractServer extends AbstractEndpoint implements Server 
     ExecutorService executor;
     private InetSocketAddress localAddress;
     private InetSocketAddress bindAddress;
+    /**
+     * 最大连接数
+     */
     private int accepts;
     private int idleTimeout = 600; //600 seconds
 
@@ -70,6 +73,7 @@ public abstract class AbstractServer extends AbstractEndpoint implements Server 
         }
         //fixme replace this with better method
         DataStore dataStore = ExtensionLoader.getExtensionLoader(DataStore.class).getDefaultExtension();
+        //什么时间放置进去的？？
         executor = (ExecutorService) dataStore.get(Constants.EXECUTOR_SERVICE_COMPONENT_KEY, Integer.toString(url.getPort()));
     }
 
@@ -129,6 +133,12 @@ public abstract class AbstractServer extends AbstractEndpoint implements Server 
         super.setUrl(getUrl().addParameters(url.getParameters()));
     }
 
+    /**
+     * 发送消息： 服务端循环所有的渠道，发消息
+     * @param message
+     * @param sent    already sent to socket?
+     * @throws RemotingException
+     */
     @Override
     public void send(Object message, boolean sent) throws RemotingException {
         Collection<Channel> channels = getChannels();
@@ -180,6 +190,11 @@ public abstract class AbstractServer extends AbstractEndpoint implements Server 
         return idleTimeout;
     }
 
+    /**
+     * 服务端未关闭，且小于连接数
+     * @param ch
+     * @throws RemotingException
+     */
     @Override
     public void connected(Channel ch) throws RemotingException {
         // If the server has entered the shutdown process, reject any new connection

@@ -51,14 +51,25 @@ import java.util.Map;
 public class NettyServer extends AbstractServer implements Server {
 
     private static final Logger logger = LoggerFactory.getLogger(NettyServer.class);
-
+    /**
+     * 客户端的channel
+     */
     private Map<String, Channel> channels; // <ip:port, channel>
-
+    /**
+     * 服务的启动
+     */
     private ServerBootstrap bootstrap;
-
+    /**
+     * netty 监听的本地channel
+     */
     private io.netty.channel.Channel channel;
-
+    /**
+     * 接受线程
+     */
     private EventLoopGroup bossGroup;
+    /**
+     * 工作线程
+     */
     private EventLoopGroup workerGroup;
 
     public NettyServer(URL url, ChannelHandler handler) throws RemotingException {
@@ -70,6 +81,7 @@ public class NettyServer extends AbstractServer implements Server {
         bootstrap = new ServerBootstrap();
 
         bossGroup = new NioEventLoopGroup(1, new DefaultThreadFactory("NettyServerBoss", true));
+        //线程数+1 ,最多32个线程
         workerGroup = new NioEventLoopGroup(getUrl().getPositiveParameter(Constants.IO_THREADS_KEY, Constants.DEFAULT_IO_THREADS),
                 new DefaultThreadFactory("NettyServerWorker", true));
 
@@ -98,6 +110,12 @@ public class NettyServer extends AbstractServer implements Server {
 
     }
 
+    /**
+     * 关闭本地channel
+     * 关闭netty
+     * 清空客户端channel
+     * @throws Throwable
+     */
     @Override
     protected void doClose() throws Throwable {
         try {
@@ -139,6 +157,10 @@ public class NettyServer extends AbstractServer implements Server {
         }
     }
 
+    /**
+     * 获取激活的客户端channel
+     * @return
+     */
     @Override
     public Collection<Channel> getChannels() {
         Collection<Channel> chs = new HashSet<Channel>();

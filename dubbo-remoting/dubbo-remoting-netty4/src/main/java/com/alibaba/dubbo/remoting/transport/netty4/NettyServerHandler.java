@@ -56,6 +56,11 @@ public class NettyServerHandler extends ChannelDuplexHandler {
         return channels;
     }
 
+    /**
+     * 链接激活
+     * @param ctx
+     * @throws Exception
+     */
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         ctx.fireChannelActive();
@@ -71,6 +76,11 @@ public class NettyServerHandler extends ChannelDuplexHandler {
         }
     }
 
+    /**
+     * 连接失活
+     * @param ctx
+     * @throws Exception
+     */
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(), url, handler);
@@ -89,6 +99,12 @@ public class NettyServerHandler extends ChannelDuplexHandler {
 
     }
 
+    /**
+     * 接受到请求
+     * @param ctx
+     * @param msg
+     * @throws Exception
+     */
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(), url, handler);
@@ -99,7 +115,13 @@ public class NettyServerHandler extends ChannelDuplexHandler {
         }
     }
 
-
+    /**
+     * 发送请求
+     * @param ctx
+     * @param msg
+     * @param promise
+     * @throws Exception
+     */
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
         super.write(ctx, msg, promise);
@@ -111,6 +133,12 @@ public class NettyServerHandler extends ChannelDuplexHandler {
         }
     }
 
+    /**
+     * 处理异常
+     * @param ctx
+     * @param cause
+     * @throws Exception
+     */
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause)
             throws Exception {

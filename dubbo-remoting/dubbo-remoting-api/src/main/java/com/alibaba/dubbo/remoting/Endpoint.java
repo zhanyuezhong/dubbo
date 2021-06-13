@@ -32,6 +32,7 @@ public interface Endpoint {
 
     /**
      * get url.
+     * 请求连接+参数
      *
      * @return url
      */
@@ -39,6 +40,7 @@ public interface Endpoint {
 
     /**
      * get channel handler.
+     * 事件处理器，在所有协议层做了一次封装
      *
      * @return channel handler
      */
@@ -46,6 +48,7 @@ public interface Endpoint {
 
     /**
      * get local address.
+     * 本地的链接地址
      *
      * @return local address.
      */

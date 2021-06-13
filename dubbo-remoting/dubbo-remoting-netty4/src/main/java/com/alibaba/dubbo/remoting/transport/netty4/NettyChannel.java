@@ -38,7 +38,9 @@ import java.util.concurrent.ConcurrentMap;
 final class NettyChannel extends AbstractChannel {
 
     private static final Logger logger = LoggerFactory.getLogger(NettyChannel.class);
-
+    /**
+     * channel 键值对
+     */
     private static final ConcurrentMap<Channel, NettyChannel> channelMap = new ConcurrentHashMap<Channel, NettyChannel>();
 
     private final Channel channel;

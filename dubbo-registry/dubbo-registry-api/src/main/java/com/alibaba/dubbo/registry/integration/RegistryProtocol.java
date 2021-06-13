@@ -163,6 +163,12 @@ public class RegistryProtocol implements Protocol {
         return new DestroyableExporter<T>(exporter, originInvoker, overrideSubscribeUrl, registeredProviderUrl);
     }
 
+    /**
+     * 将invoker 暴露到本地，默认实现为netty
+     * @param originInvoker
+     * @param <T>
+     * @return
+     */
     @SuppressWarnings("unchecked")
     private <T> ExporterChangeableWrapper<T> doLocalExport(final Invoker<T> originInvoker) {
         String key = getCacheKey(originInvoker);
@@ -171,6 +177,7 @@ public class RegistryProtocol implements Protocol {
             synchronized (bounds) {
                 exporter = (ExporterChangeableWrapper<T>) bounds.get(key);
                 if (exporter == null) {
+
                     final Invoker<?> invokerDelegete = new InvokerDelegete<T>(originInvoker, getProviderUrl(originInvoker));
                     exporter = new ExporterChangeableWrapper<T>((Exporter<T>) protocol.export(invokerDelegete), originInvoker);
                     bounds.put(key, exporter);
